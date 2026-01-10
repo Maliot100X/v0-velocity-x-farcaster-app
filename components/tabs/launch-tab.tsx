@@ -1,15 +1,16 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { Rocket, Sparkles, Upload, ChevronDown, ChevronUp, Zap, Shield, Info } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { Rocket, Sparkles, Upload, ChevronDown, ChevronUp, Wallet, Percent, ShieldCheck } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useWriteContract, useAccount, useConnect } from "wagmi"
+import sdk from "@farcaster/frame-sdk"
 
 export function LaunchTab() {
-  const { isConnected } = useAccount()
+  const { address, isConnected } = useAccount()
   const { connect, connectors } = useConnect()
   const { writeContract } = useWriteContract()
   
@@ -18,30 +19,23 @@ export function LaunchTab() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   
   const [formData, setFormData] = useState({
-    name: "",
-    symbol: "",
-    description: "",
-    initialSupply: "1000000000",
-    image: null as File | null,
+    name: "", symbol: "", description: "", supply: "1000000000",
+    feeTier: "1%", rewardRecipient: "0x1909b332397144aeb4867B7274a05Dbb25bD1Fec"
   })
 
-  const handleImageClick = () => fileInputRef.current?.click()
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setFormData({ ...formData, image: file })
-      setImagePreview(URL.createObjectURL(file))
+  // LOGIC: Intelligent Connection (Farcaster vs Browser)
+  const handleConnect = () => {
+    const isFrame = typeof window !== "undefined" && (window as any).farcaster
+    if (isFrame) {
+      sdk.actions.signIn({})
+    } else {
+      connect({ connector: connectors[0] })
     }
   }
 
   const handleDeployOnChain = () => {
-    if (!isConnected) {
-      connect({ connector: connectors[0] })
-      return
-    }
+    if (!isConnected) { handleConnect(); return }
     
-    // OFFICIAL CLANKER V2 FACTORY CALL
     writeContract({
       address: "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
       abi: [{
@@ -49,98 +43,71 @@ export function LaunchTab() {
         type: 'function',
         stateMutability: 'public',
         inputs: [
-          { name: 'name', type: 'string' },
-          { name: 'symbol', type: 'string' },
-          { name: 'supply', type: 'uint256' },
-          { name: 'fid', type: 'uint256' },
-          { name: 'image', type: 'string' },
-          { name: 'castHash', type: 'string' }
+          { name: 'name', type: 'string' }, { name: 'symbol', type: 'string' },
+          { name: 'supply', type: 'uint256' }, { name: 'fid', type: 'uint256' },
+          { name: 'image', type: 'string' }, { name: 'castHash', type: 'string' }
         ],
         outputs: [{ name: '', type: 'address' }],
       }],
       functionName: 'createToken',
-      args: [
-        formData.name, 
-        formData.symbol, 
-        BigInt(formData.initialSupply), 
-        BigInt(0), 
-        imagePreview || "", 
-        "0x"
-      ],
+      args: [formData.name, formData.symbol, BigInt(formData.supply), BigInt(0), imagePreview || "", "0x"],
     })
   }
 
   return (
     <div className="px-4 pt-4 pb-24 space-y-6">
-      <section>
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold font-orbitron text-primary uppercase italic">Cast to Launch</h2>
+      <h2 className="text-xl font-bold font-orbitron text-primary uppercase">Create a Clanker</h2>
+      
+      <Card className="p-5 bg-card/60 border-primary/20 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Input placeholder="Name*" value={formData.name} onChange={(e)=>setFormData({...formData, name:e.target.value})} className="bg-background border-primary/10 h-10 text-xs" />
+          <Input placeholder="Symbol*" value={formData.symbol} onChange={(e)=>setFormData({...formData, symbol:e.target.value})} className="bg-background border-primary/10 h-10 text-xs uppercase" />
         </div>
-        <Card className="p-5 bg-gradient-to-br from-primary/20 to-accent/5 border-primary/40 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
-          <p className="text-xs text-cyan-200 mb-4 leading-relaxed uppercase font-bold tracking-tighter">
-            Mention @VelocityX in a cast. AI + Clanker deploys instantly.
-          </p>
-          <Button onClick={() => alert("Compose cast logic active.")} className="w-full bg-primary hover:bg-primary/90 font-black tracking-tighter shadow-lg">
-            PRECLANK VIA @VELOCITYX
-          </Button>
-        </Card>
-      </section>
 
-      <section>
-        <div className="flex items-center gap-2 mb-3">
-          <Rocket className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold font-orbitron text-primary uppercase">Create a Clanker</h2>
+        <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-primary/30 rounded-xl p-6 text-center bg-primary/5 cursor-pointer">
+          <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) setImagePreview(URL.createObjectURL(file))
+          }} />
+          {imagePreview ? <img src={imagePreview} className="h-16 mx-auto rounded" /> : <Upload className="w-6 h-6 text-primary mx-auto opacity-70" />}
+          <p className="text-[10px] text-primary/80 font-bold mt-2">IMAGE (JPEG/PNG)</p>
         </div>
-        
-        <Card className="p-5 bg-card/80 border-primary/20 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Input placeholder="Token Name*" value={formData.name} onChange={(e)=>setFormData({...formData, name:e.target.value})} className="bg-background border-primary/10 h-10 text-xs" />
-            <Input placeholder="Symbol ($)*" value={formData.symbol} onChange={(e)=>setFormData({...formData, symbol:e.target.value})} className="bg-background border-primary/10 h-10 text-xs uppercase" />
-          </div>
 
-          <Textarea placeholder="Token Metadata (Optional)" value={formData.description} onChange={(e)=>setFormData({...formData, description:e.target.value})} className="bg-background border-primary/10 text-xs min-h-[60px]" />
+        <button onClick={()=>setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-[10px] font-bold text-primary/60 uppercase">
+          {showAdvanced ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>}
+          Advanced: Fees & Rewards (Optional)
+        </button>
 
-          <div onClick={handleImageClick} className="border-2 border-dashed border-primary/30 rounded-xl p-6 text-center bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer">
-            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
-            {imagePreview ? (
-              <img src={imagePreview} alt="Preview" className="h-20 mx-auto rounded-lg shadow-lg border border-primary/50" />
-            ) : (
-              <>
-                <Upload className="w-6 h-6 text-primary mx-auto mb-2 opacity-70" />
-                <p className="text-[10px] text-primary/80 font-bold uppercase tracking-widest">Select Image (1MB Max)</p>
-              </>
-            )}
-          </div>
-
-          <button onClick={()=>setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-[10px] font-bold text-primary/60 uppercase">
-            {showAdvanced ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>}
-            Advanced Protocol Configuration
-          </button>
-
-          {showAdvanced && (
-            <div className="space-y-4 p-4 bg-black/40 rounded-lg border border-primary/10">
-              <Input placeholder="Initial Supply" value={formData.initialSupply} onChange={(e)=>setFormData({...formData, initialSupply:e.target.value})} className="bg-black border-primary/20 h-8 text-xs font-mono" />
-              <div className="grid grid-cols-2 gap-3">
-                 <div className="p-2 rounded bg-primary/5 border border-primary/10 text-center">
-                   <p className="text-[8px] text-muted-foreground uppercase">Fee Tier</p>
-                   <p className="text-[10px] font-bold text-primary italic">1% Locked</p>
-                 </div>
-                 <div className="p-2 rounded bg-primary/5 border border-primary/10 text-center">
-                   <p className="text-[8px] text-muted-foreground uppercase">LP Status</p>
-                   <p className="text-[10px] font-bold text-green-400">BURNED</p>
-                 </div>
+        {showAdvanced && (
+          <div className="space-y-4 p-4 bg-black/40 rounded-lg border border-primary/10">
+            <div className="space-y-2">
+              <label className="text-[9px] uppercase font-bold text-muted-foreground">Fee Tier</label>
+              <div className="flex gap-2">
+                {["1%", "2%", "3%"].map(f => (
+                  <button key={f} className={`px-3 py-1 text-[10px] border ${formData.feeTier === f ? 'border-primary bg-primary/20' : 'border-white/10'}`} onClick={()=>setFormData({...formData, feeTier: f})}>{f}</button>
+                ))}
               </div>
             </div>
-          )}
-
-          <div className="pt-4">
-            <Button onClick={handleDeployOnChain} className="w-full bg-primary hover:bg-primary/90 font-black text-xl h-16 shadow-[0_0_25px_rgba(var(--primary),0.4)] transition-transform active:scale-95">
-              {isConnected ? "DEPLOY ON BASE" : "CONNECT TO DEPLOY"}
-            </Button>
-            <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest mt-2 font-bold italic">Admin Fee: 10% to 0x1909...</p>
+            <div>
+              <label className="text-[9px] uppercase font-bold text-muted-foreground">Protocol Recipient</label>
+              <Input disabled value="0x1909...5bD1Fec" className="bg-black/40 h-8 text-[10px] opacity-60" />
+            </div>
           </div>
-        </Card>
+        )}
+
+        <Button onClick={handleDeployOnChain} className="w-full bg-primary hover:bg-primary/90 font-black text-xl h-16 shadow-[0_0_25px_rgba(var(--primary),0.4)]">
+          {isConnected ? "DEPLOY ON BASE" : "CONNECT WALLET"}
+        </Button>
+      </Card>
+
+      <Card className="p-4 bg-primary/5 border border-primary/10">
+        <div className="flex items-center gap-2 mb-2 text-primary">
+          <Sparkles className="w-4 h-4" />
+          <h3 className="text-xs font-bold font-orbitron uppercase">Preclank via Cast</h3>
+        </div>
+        <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+          Mention @VelocityX in a cast with name and symbol. Our AI bot listens and deploys via Clanker.
+        </p>
       </section>
     </div>
   )
