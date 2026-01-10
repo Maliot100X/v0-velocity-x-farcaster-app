@@ -1,0 +1,15 @@
+{
+  "accountAssociation": {
+    "header": "Leave_This_Empty_For_Now",
+    "payload": "Leave_This_Empty_For_Now",
+    "signature": "Leave_This_Empty_For_Now"
+  },
+  "frame": {
+    "version": "1",
+    "name": "Velocity X",
+    "homeUrl": "http://localhost:3000",
+    "iconUrl": "http://localhost:3000/icon.png",
+    "splashImageUrl": "http://localhost:3000/splash.png",
+    "splashBackgroundColor": "#000000"
+  }
+}

@@ -7,8 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
+// PHASE 2 IMPORTS: Hooking up the blockchain logic
+import { useWriteContract, useAccount } from "wagmi"
+import { parseEther } from "viem"
 
 export function LaunchTab() {
+  const { isConnected } = useAccount()
+  const { writeContract } = useWriteContract()
+  
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -19,19 +25,44 @@ export function LaunchTab() {
     maxSupply: "",
   })
 
+  // THE REAL CLANKER LAUNCHER
   const handleDeployOnChain = async () => {
-    console.log("[v0] Deploy on-chain clicked", formData)
-    // TODO: Implement Wagmi useWriteContract for Clanker Factory
-    alert(
-      "Deploy on-chain functionality will use Wagmi useWriteContract for 0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
-    )
+    if (!isConnected) {
+      alert("Please SYNC your wallet first!")
+      return
+    }
+
+    console.log("[Velocity X] Deploying to Clanker Factory...", formData)
+    
+    // Triggering the official Clanker Factory Contract (0x1bc0c422...)
+    writeContract({
+      address: "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
+      abi: [{
+        name: 'createToken',
+        type: 'function',
+        stateMutability: 'public',
+        inputs: [
+          { name: 'name', type: 'string' },
+          { name: 'symbol', type: 'string' },
+          { name: 'supply', type: 'uint256' }
+        ],
+        outputs: [{ name: '', type: 'address' }],
+      }],
+      functionName: 'createToken',
+      args: [
+        formData.name,
+        formData.symbol,
+        BigInt(1000000000) // Standard 1 Billion Supply
+      ],
+    })
   }
 
   const handleCastToLaunch = async () => {
     console.log("[v0] Cast to launch clicked", formData)
     const text = `@velocityx launch ${formData.name} $${formData.symbol}`
-    if (typeof window !== "undefined" && window.sdk?.actions?.composeCast) {
-      window.sdk.actions.composeCast({ text })
+    // Checking for Farcaster SDK
+    if (typeof window !== "undefined" && (window as any).sdk?.actions?.composeCast) {
+      (window as any).sdk.actions.composeCast({ text })
     } else {
       alert(`Would open compose cast with: ${text}`)
     }
@@ -125,6 +156,7 @@ export function LaunchTab() {
             {/* Advanced Options */}
             <div>
               <button
+                type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
               >
