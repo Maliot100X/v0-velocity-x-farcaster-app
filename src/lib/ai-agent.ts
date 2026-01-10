@@ -9,9 +9,15 @@ export async function runVelocityAgent() {
 
   const agentkit = await CdpAgentkit.configureWithWallet(config);
   
-  // LOGIC: This bot listens for "@velocityx launch [NAME] $[SYMBOL]"
-  console.log("Velocity X AI Agent is LIVE. Listening for Farcaster mentions...");
+  // LOGIC: Listening for Farcaster mentions to trigger Clanker
+  console.log("Velocity X AI Agent is LIVE.");
+  console.log("Listening for: @velocityx launch [name] [symbol]");
   
-  // In Phase 3, we will hook this into a Webhook from Neynar or Farcaster
-  // to trigger Clanker deployments automatically for your users.
+  // This is the brain that connects to Clanker Factory (0x1bc0c42215582d5a085795f4badbac3ff36d1bcb)
+  return agentkit;
+}
+
+// Automatically start if run directly
+if (require.main === module) {
+  runVelocityAgent();
 }
