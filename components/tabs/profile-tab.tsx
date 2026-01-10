@@ -1,18 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Check, Wallet, UserIcon } from "lucide-react"
+// PHASE 2: Real Wallet Hooks
+import { useConnect, useAccount, useDisconnect } from "wagmi"
 
 export function ProfileTab() {
+  const { address, isConnected } = useAccount()
+  const { connect, connectors } = useConnect()
+  const { disconnect } = useDisconnect()
+
   const [isFarcasterConnected, setIsFarcasterConnected] = useState(false)
-  const [isMetamaskConnected, setIsMetamaskConnected] = useState(false)
-  const [isCoinbaseConnected, setIsCoinbaseConnected] = useState(false)
   const [farcasterProfile, setFarcasterProfile] = useState<any>(null)
 
+  // Logic: Check if connected to show real address
+  const truncatedAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not Connected"
+
   const handleSyncFarcaster = () => {
-    // Simulate Farcaster profile fetch
+    // Keep your original Farcaster sync demo for now
     console.log("[v0] Syncing Farcaster profile...")
     setFarcasterProfile({
       username: "demo_user",
@@ -22,29 +29,39 @@ export function ProfileTab() {
     setIsFarcasterConnected(true)
   }
 
+  // REAL LOGIC: Trigger MetaMask
   const handleConnectMetamask = () => {
-    console.log("[v0] Connecting MetaMask...")
-    setIsMetamaskConnected(true)
+    const injectedConnector = connectors.find((c) => c.id === "injected")
+    if (injectedConnector) {
+      connect({ connector: injectedConnector })
+    } else {
+      alert("MetaMask not found. Please install the extension.")
+    }
   }
 
+  // REAL LOGIC: Trigger Coinbase Wallet
   const handleConnectCoinbase = () => {
-    console.log("[v0] Connecting Coinbase Wallet...")
-    setIsCoinbaseConnected(true)
+    const cbConnector = connectors.find((c) => c.id === "coinbaseWalletSDK")
+    if (cbConnector) {
+      connect({ connector: cbConnector })
+    } else {
+      alert("Coinbase Wallet not found.")
+    }
   }
 
   return (
     <div className="px-4 pt-6 space-y-6">
-      <h2 className="text-xl font-bold font-orbitron text-primary">Profile</h2>
+      <h2 className="text-xl font-bold font-orbitron text-primary uppercase">Profile</h2>
 
       {/* Profile Card */}
       <Card className="p-6 bg-card/50 backdrop-blur border-primary/20 glow-cyan">
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary glow-cyan-sm flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary glow-cyan-sm flex items-center justify-center overflow-hidden">
             {farcasterProfile ? (
               <img
                 src={farcasterProfile.pfp || "/placeholder.svg"}
                 alt="Profile"
-                className="w-full h-full rounded-full"
+                className="w-full h-full object-cover"
               />
             ) : (
               <UserIcon className="w-8 h-8 text-primary" />
@@ -61,7 +78,7 @@ export function ProfileTab() {
 
       {/* Connections */}
       <section>
-        <h3 className="font-bold mb-3">Connections</h3>
+        <h3 className="font-bold mb-3 uppercase text-xs tracking-widest text-primary">Connections</h3>
         <div className="space-y-3">
           {/* Farcaster */}
           <Card className="p-4 bg-card/50 backdrop-blur border-primary/20">
@@ -71,16 +88,16 @@ export function ProfileTab() {
                   <span className="text-lg">🎭</span>
                 </div>
                 <div>
-                  <p className="font-medium">Farcaster</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isFarcasterConnected ? "Connected" : "Not Connected"}
+                  <p className="font-medium text-sm">Farcaster</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">
+                    {isFarcasterConnected ? "Connected" : "Disconnected"}
                   </p>
                 </div>
               </div>
               {isFarcasterConnected ? (
                 <Check className="w-5 h-5 text-green-400" />
               ) : (
-                <Button size="sm" onClick={handleSyncFarcaster}>
+                <Button size="sm" variant="outline" className="border-primary/50 text-xs" onClick={handleSyncFarcaster}>
                   Sync
                 </Button>
               )}
@@ -95,16 +112,16 @@ export function ProfileTab() {
                   <span className="text-lg">🦊</span>
                 </div>
                 <div>
-                  <p className="font-medium">MetaMask</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isMetamaskConnected ? "0xabcd...ef01" : "Not Connected"}
+                  <p className="font-medium text-sm">MetaMask</p>
+                  <p className="text-[10px] text-muted-foreground font-mono">
+                    {isConnected ? truncatedAddress : "Disconnected"}
                   </p>
                 </div>
               </div>
-              {isMetamaskConnected ? (
-                <Check className="w-5 h-5 text-green-400" />
+              {isConnected ? (
+                <Button size="sm" variant="ghost" className="text-xs text-red-400" onClick={() => disconnect()}>Disconnect</Button>
               ) : (
-                <Button size="sm" onClick={handleConnectMetamask}>
+                <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-xs" onClick={handleConnectMetamask}>
                   Connect
                 </Button>
               )}
@@ -119,16 +136,16 @@ export function ProfileTab() {
                   <Wallet className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
-                  <p className="font-medium">Coinbase Wallet</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isCoinbaseConnected ? "0x1234...5678" : "Not Connected"}
+                  <p className="font-medium text-sm">Coinbase Wallet</p>
+                  <p className="text-[10px] text-muted-foreground font-mono">
+                    {isConnected ? truncatedAddress : "Disconnected"}
                   </p>
                 </div>
               </div>
-              {isCoinbaseConnected ? (
+              {isConnected ? (
                 <Check className="w-5 h-5 text-green-400" />
               ) : (
-                <Button size="sm" onClick={handleConnectCoinbase}>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs" onClick={handleConnectCoinbase}>
                   Connect
                 </Button>
               )}
@@ -141,11 +158,11 @@ export function ProfileTab() {
       <div className="grid grid-cols-2 gap-3">
         <Card className="p-4 bg-card/50 backdrop-blur border-primary/20 text-center">
           <p className="text-2xl font-bold font-mono text-primary">3</p>
-          <p className="text-xs text-muted-foreground">Tokens Created</p>
+          <p className="text-[10px] uppercase text-muted-foreground">Tokens Created</p>
         </Card>
         <Card className="p-4 bg-card/50 backdrop-blur border-primary/20 text-center">
           <p className="text-2xl font-bold font-mono text-primary">7</p>
-          <p className="text-xs text-muted-foreground">Active Stakes</p>
+          <p className="text-[10px] uppercase text-muted-foreground">Active Stakes</p>
         </Card>
       </div>
     </div>

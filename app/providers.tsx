@@ -1,50 +1,30 @@
 "use client";
 
-import { useEffect, useState, ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { base } from "wagmi/chains";
+import { coinbaseWallet, injected } from "wagmi/connectors";
 
-// Logic: We define the config here
 const config = createConfig({
   chains: [base],
+  connectors: [
+    injected(), 
+    coinbaseWallet({ appName: 'Velocity X' }),
+  ],
   transports: { [base.id]: http() },
 });
 
 const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    // Logic: Dynamic import to prevent build errors if SDK is missing during pre-render
-    const initSdk = async () => {
-      try {
-        const { default: sdk } = await import("@farcaster/frame-sdk");
-        sdk.actions.ready();
-      } catch (e) {
-        console.error("SDK Load Error", e);
-      }
-      setIsReady(true);
-    };
-    initSdk();
-  }, []);
-
-  // During SSR/Initial load, we still want to show the UI
-  if (!isReady) {
-    return (
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      </WagmiProvider>
-    );
-  }
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        {children}
+        {mounted && children}
       </QueryClientProvider>
     </WagmiProvider>
   );
