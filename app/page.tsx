@@ -4,17 +4,29 @@ import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { TabNavigation } from "@/components/tab-navigation"
 import { HomeTab } from "@/components/tabs/home-tab"
-import { StakeTab } from "@/components/tabs/stake-tab"
-import { BuyTab } from "@/components/tabs/buy-tab"
-import { EarnTab } from "@/components/tabs/earn-tab"
 import { LaunchTab } from "@/components/tabs/launch-tab"
-import { LeaderboardTab } from "@/components/tabs/leaderboard-tab"
-import { StoreTab } from "@/components/tabs/store-tab"
+import { AssetsTab } from "@/components/tabs/assets-tab"
+import { VaultsTab } from "@/components/tabs/vaults-tab"
+import { ShopTab } from "@/components/tabs/shop-tab"
 import { ProfileTab } from "@/components/tabs/profile-tab"
+import { LeaderboardTab } from "@/components/tabs/leaderboard-tab"
+import { BoostsTab } from "@/components/tabs/boosts-tab"
+import { ClaimTab } from "@/components/tabs/claim-tab"
+import { SettingsTab } from "@/components/tabs/settings-tab"
 import { TokenDetailPage } from "@/components/token-detail-page"
 import { GrowthFundPage } from "@/components/growth-fund-page"
 
-export type TabType = "home" | "stake" | "buy" | "earn" | "launch" | "leaderboard" | "store" | "profile"
+export type TabType =
+  | "home"
+  | "launch"
+  | "assets"
+  | "vaults"
+  | "shop"
+  | "profile"
+  | "leaderboard"
+  | "boosts"
+  | "claim"
+  | "settings"
 
 declare global {
   interface Window {
@@ -22,6 +34,7 @@ declare global {
       actions: {
         ready: () => void
         composeCast: (options: { text: string }) => void
+        signIn: () => Promise<void>
       }
     }
   }
@@ -67,18 +80,20 @@ export default function Page() {
           <TokenDetailPage tokenId={selectedToken} onBack={handleBackToHome} />
         ) : (
           <>
-            <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-
-            <main className="pb-6">
+            <main className="pb-24">
               {activeTab === "home" && <HomeTab onTokenSelect={handleTokenSelect} />}
-              {activeTab === "stake" && <StakeTab onTokenSelect={handleTokenSelect} />}
-              {activeTab === "buy" && <BuyTab onTokenSelect={handleTokenSelect} />}
-              {activeTab === "earn" && <EarnTab />}
               {activeTab === "launch" && <LaunchTab />}
-              {activeTab === "leaderboard" && <LeaderboardTab />}
-              {activeTab === "store" && <StoreTab />}
+              {activeTab === "assets" && <AssetsTab />}
+              {activeTab === "vaults" && <VaultsTab />}
+              {activeTab === "shop" && <ShopTab />}
               {activeTab === "profile" && <ProfileTab />}
+              {activeTab === "leaderboard" && <LeaderboardTab />}
+              {activeTab === "boosts" && <BoostsTab />}
+              {activeTab === "claim" && <ClaimTab />}
+              {activeTab === "settings" && <SettingsTab />}
             </main>
+
+            <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
           </>
         )}
       </div>
