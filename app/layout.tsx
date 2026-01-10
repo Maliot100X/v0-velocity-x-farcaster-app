@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { Orbitron, Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
+// Logic: Importing the Providers we need to stop the crash
+import { Providers } from "./providers"
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -26,8 +28,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} ${orbitron.variable} font-sans antialiased`}>
-        {children}
+      <body className={`${inter.className} ${orbitron.variable} font-sans antialiased bg-black text-white`}>
+        {/* Logic: Wrapped children in Providers so Wagmi works */}
+        <Providers>
+          {children}
+        </Providers>
         <Analytics />
       </body>
     </html>
