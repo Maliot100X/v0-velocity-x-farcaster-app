@@ -9,7 +9,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@coinbase/agentkit": "^0.10.4",
     "@coinbase/agentkit-langchain": "^0.3.0",
     "@emotion/is-prop-valid": "latest",
     "@farcaster/frame-sdk": "^0.0.64",
