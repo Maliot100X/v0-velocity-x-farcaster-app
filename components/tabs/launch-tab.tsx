@@ -16,7 +16,6 @@ export function LaunchTab() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [formData, setFormData] = useState({ name: "", symbol: "" })
 
-  // REAL-TIME WATCHER (Background only)
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   })
@@ -35,10 +34,12 @@ export function LaunchTab() {
       return 
     }
     
+    // FETCH REAL FID FROM SDK
     const context = await sdk.context;
     const userFid = context?.user?.fid || 0;
 
     writeContract({
+      // THIS IS THE REAL CLANKER FACTORY ADDRESS
       address: "0x448f8b93784834ef9853966eb962f928e469796e",
       abi: [{
         name: 'deployToken',
@@ -65,13 +66,13 @@ export function LaunchTab() {
 
   return (
     <div className="px-4 pt-4 pb-24 space-y-6">
-      {/* PROCESSING OVERLAY - ONLY SHOWS DURING ACTIVE TX */}
       {(isPending || isConfirming) && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center italic">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center italic text-center px-6">
           <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
           <p className="text-primary font-black font-orbitron animate-pulse uppercase tracking-tighter">
             {isPending ? "Waiting for Wallet..." : "Confirming on Base..."}
           </p>
+          <p className="text-[10px] text-white/40 mt-2 uppercase font-bold tracking-widest">Do not close the app</p>
         </div>
       )}
 
@@ -81,7 +82,6 @@ export function LaunchTab() {
         </p>
       </div>
 
-      {/* CAST TO LAUNCH - EXACTLY HOW YOU HAD IT */}
       <section>
         <div className="flex items-center gap-2 mb-3 font-orbitron text-primary uppercase italic text-sm">
           <Sparkles className="w-5 h-5" />
@@ -95,11 +95,10 @@ export function LaunchTab() {
              <div className="flex items-center gap-2 text-[10px] text-muted-foreground"><CheckCircle2 className="w-3 h-3 text-primary"/> Name and symbol included</div>
              <div className="flex items-center gap-2 text-[10px] text-muted-foreground"><CheckCircle2 className="w-3 h-3 text-primary"/> 50/50 WETH Reward Split</div>
           </div>
-          <Button onClick={handleCastToLaunch} className="w-full bg-primary hover:bg-primary/90 font-black h-12 shadow-lg italic">CAST TO LAUNCH</Button>
+          <Button onClick={handleCastToLaunch} className="w-full bg-primary hover:bg-primary/90 font-black h-12 shadow-lg italic uppercase">CAST TO LAUNCH</Button>
         </Card>
       </section>
 
-      {/* INSTANT CREATOR - EXACTLY HOW YOU HAD IT */}
       <section>
         <div className="flex items-center gap-2 mb-3 font-orbitron text-primary uppercase text-sm italic">
           <Rocket className="w-5 h-5" />
@@ -121,7 +120,7 @@ export function LaunchTab() {
             <p className="text-[10px] text-primary/80 font-bold mt-2 uppercase tracking-widest italic">Select Image</p>
           </div>
 
-          <div className="p-3 bg-black/40 rounded-lg border border-primary/10 flex justify-between items-center text-[9px] uppercase font-bold text-muted-foreground">
+          <div className="p-3 bg-black/40 rounded-lg border border-primary/10 flex justify-between items-center text-[9px] uppercase font-bold text-muted-foreground italic">
              <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-green-400"/> LP: BURNED</span>
              <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-yellow-400"/> FEE: 1% STATIC</span>
           </div>
@@ -129,7 +128,7 @@ export function LaunchTab() {
           <Button 
             onClick={handleDeployOnChain} 
             disabled={isPending || isConfirming}
-            className="w-full bg-primary hover:bg-primary/90 font-black text-xl h-16 shadow-2xl italic tracking-tighter"
+            className="w-full bg-primary hover:bg-primary/90 font-black text-xl h-16 shadow-2xl italic tracking-tighter uppercase"
           >
             {isPending || isConfirming ? "PROCESSING..." : isConnected ? "DEPLOY ON BASE" : "CONNECT WALLET"}
           </Button>
