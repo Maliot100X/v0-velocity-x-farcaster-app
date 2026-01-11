@@ -5,11 +5,26 @@ import { TrendingUp, ArrowUpRight, Clock, AlertCircle, Sparkles, Wallet } from "
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import { useAccount, useBalance } from "wagmi"
 
+// 1. KEEP INTERFACES SO THE APP DOES NOT CRASH
 interface HomeTabProps {
   onTokenSelect: (tokenId: string) => void
+}
+
+interface Token {
+  id: string
+  name: string
+  symbol: string
+  creator: string
+  price: string
+  marketCap: string
+  volume24h: string
+  change24h: number
+  rewardsStreamed: string
+  stakersCount: number
+  trending?: boolean
+  boosted?: "1h" | "24h" | null
 }
 
 export function HomeTab({ onTokenSelect }: HomeTabProps) {
@@ -21,6 +36,9 @@ export function HomeTab({ onTokenSelect }: HomeTabProps) {
   const [staked] = useState(690982.0)
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false)
 
+  // 2. EMPTY LIST (REMOVED DEMO COINS)
+  const displayTokens: Token[] = [] 
+
   useEffect(() => {
     const interval = setInterval(() => {
       setWinRewards((prev) => prev + 0.000000095)
@@ -29,71 +47,49 @@ export function HomeTab({ onTokenSelect }: HomeTabProps) {
   }, [])
 
   return (
-    <div className="space-y-4 px-4 pt-4 pb-24">
-      {/* VELOCITY X PLATFORM TOKEN - THE ONLY ONE LEFT */}
+    <div className="space-y-4 px-4 pt-4 pb-24 max-w-[500px] mx-auto">
+      {/* VELOCITY X PLATFORM STATS */}
       <Card className="p-4 bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border-cyan-500/30 glow-cyan rounded-3xl">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center font-black italic text-primary shadow-[0_0_15px_rgba(0,255,255,0.2)]">
+          <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center font-black italic text-primary">
             VX
           </div>
           <div>
-            <h2 className="text-xl font-black font-orbitron text-primary italic uppercase tracking-tighter">VELOCITY X</h2>
-            <p className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest italic">Platform Authority</p>
+            <h2 className="text-xl font-black font-orbitron text-primary italic uppercase tracking-tighter leading-none">VELOCITY X</h2>
+            <p className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest italic mt-1 text-left">Ape · Stake · Earn</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="text-center p-3 bg-black/40 border border-white/5 rounded-2xl">
-            <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Staked</div>
+            <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Total Staked</div>
             <div className="text-sm font-bold font-mono text-white">{staked.toLocaleString()} B3</div>
           </div>
           <div className="text-center p-3 bg-black/40 border border-white/5 rounded-2xl">
-            <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Balance</div>
+            <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Your Wallet</div>
             <div className="text-sm font-bold font-mono text-green-400">
-              {isConnected ? `${walletBalance?.formatted.slice(0, 6)} ETH` : "$0.00"}
+              {isConnected ? `${walletBalance?.formatted.slice(0, 6)} ETH` : "0.00 --"}
             </div>
           </div>
         </div>
 
         <div className="p-3 bg-primary/5 rounded-2xl border border-primary/10 mb-4">
-          <div className="flex items-center justify-between mb-1 text-[9px] font-bold text-primary uppercase">
+          <div className="flex items-center justify-between mb-1 text-[9px] font-bold text-primary uppercase font-orbitron">
             <span>Live Win Rewards</span>
-            <TrendingUp className="w-3 h-3 animate-bounce" />
+            <TrendingUp className="w-3 h-3 text-green-400" />
           </div>
           <div className="text-2xl font-mono font-bold text-white tracking-tighter">{winRewards.toFixed(9)}</div>
-          <div className="text-[9px] font-bold text-green-400 mt-1">+0.000000095 WIN/s</div>
+          <div className="text-[8px] font-bold text-green-400 mt-1">+0.000000095 WIN/s</div>
         </div>
 
         <Button
           onClick={() => setShowWithdrawalModal(true)}
-          className="w-full bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-2xl uppercase italic shadow-lg shadow-primary/20"
+          className="w-full bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-2xl uppercase italic"
         >
           <ArrowUpRight className="w-4 h-4 mr-2" />
           Withdraw Rewards
         </Button>
       </Card>
-
-      {/* WITHDRAWAL MODAL */}
-      {showWithdrawalModal && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-6">
-          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="w-full max-w-sm">
-            <Card className="p-6 bg-black border-primary/30 rounded-3xl">
-              <h3 className="text-lg font-black font-orbitron text-primary mb-6 italic uppercase tracking-tighter text-center">Protocol Exit</h3>
-              <div className="space-y-3">
-                <Card className="p-4 bg-red-500/10 border-red-500/20 rounded-2xl cursor-pointer hover:bg-red-500/20 transition-all">
-                  <h4 className="font-bold text-red-400 text-xs flex items-center gap-2 uppercase italic"><Clock className="w-3 h-3" /> Instant Exit</h4>
-                  <p className="text-[10px] text-muted-foreground mt-1">Fee: 10% Protocol Burn</p>
-                </Card>
-                <Card className="p-4 bg-green-500/10 border-green-500/20 rounded-2xl cursor-pointer hover:bg-green-500/20 transition-all">
-                  <h4 className="font-bold text-green-400 text-xs flex items-center gap-2 uppercase italic"><AlertCircle className="w-3 h-3" /> Standard Exit</h4>
-                  <p className="text-[10px] text-muted-foreground mt-1">45-Day Yield Lock (0% Fee)</p>
-                </Card>
-              </div>
-              <Button onClick={() => setShowWithdrawalModal(false)} variant="ghost" className="w-full mt-6 text-muted-foreground text-xs uppercase font-bold">Cancel</Button>
-            </Card>
-          </motion.div>
-        </motion.div>
-      )}
 
       {/* FILTER BUTTONS */}
       <div className="flex gap-2">
@@ -105,21 +101,53 @@ export function HomeTab({ onTokenSelect }: HomeTabProps) {
               activeSubTab === t ? "bg-primary text-black" : "bg-white/5 text-muted-foreground border border-white/10"
             }`}
           >
-            {t === "new" && <Sparkles className="w-3 h-3 mr-1" />}
-            {t === "volume" && <TrendingUp className="w-3 h-3 mr-1" />}
-            {t === "boosted" && <TrendingUp className="w-3 h-3 mr-1 text-orange-500" />}
             {t}
           </Button>
         ))}
       </div>
 
-      {/* ASSET LIST (EMPTY FOR NOW) */}
-      <section className="pt-4">
-        <div className="p-12 text-center border border-dashed border-white/10 rounded-3xl bg-white/5 flex flex-col items-center justify-center">
-           <Wallet className="w-8 h-8 text-white/10 mb-3" />
-           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic opacity-50">Connect Wallet to view Active Streams</p>
+      {/* ASSET LIST (EMPTY STATE) */}
+      <section className="pt-2">
+        <div className="flex items-center gap-2 mb-4 px-1">
+          <TrendingUp className="w-4 h-4 text-primary" />
+          <h2 className="text-xs font-bold font-orbitron uppercase tracking-widest text-primary">Live Assets</h2>
         </div>
+
+        {displayTokens.length > 0 ? (
+          <div className="space-y-2 italic">
+             {/* Tokens would go here */}
+          </div>
+        ) : (
+          <div className="p-12 text-center border border-dashed border-white/10 rounded-3xl bg-white/5 flex flex-col items-center justify-center">
+             <Wallet className="w-8 h-8 text-white/10 mb-3" />
+             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic opacity-50 text-center">
+               Connect Wallet to view Active Streams
+             </p>
+          </div>
+        )}
       </section>
+
+      {/* WITHDRAWAL MODAL */}
+      {showWithdrawalModal && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-6">
+          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="w-full max-w-sm">
+            <Card className="p-6 bg-black border-primary/30 rounded-3xl">
+              <h3 className="text-lg font-black font-orbitron text-primary mb-6 italic uppercase tracking-tighter text-center">Protocol Exit</h3>
+              <div className="space-y-3 italic">
+                <Card className="p-4 bg-red-500/10 border-red-500/20 rounded-2xl cursor-pointer hover:bg-red-500/20 transition-all">
+                  <h4 className="font-bold text-red-400 text-xs flex items-center gap-2 uppercase italic"><Clock className="w-3 h-3" /> Instant Exit</h4>
+                  <p className="text-[10px] text-muted-foreground mt-1">Fee: 10% Protocol Burn</p>
+                </Card>
+                <Card className="p-4 bg-green-500/10 border-green-500/20 rounded-2xl cursor-pointer hover:bg-green-500/20 transition-all">
+                  <h4 className="font-bold text-green-400 text-xs flex items-center gap-2 uppercase italic"><AlertCircle className="w-3 h-3" /> Standard Exit</h4>
+                  <p className="text-[10px] text-muted-foreground mt-1">45-Day Yield Lock (0% Fee)</p>
+                </Card>
+              </div>
+              <Button onClick={() => setShowWithdrawalModal(false)} variant="ghost" className="w-full mt-6 text-muted-foreground text-xs uppercase font-bold italic">Cancel</Button>
+            </Card>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   )
 }
