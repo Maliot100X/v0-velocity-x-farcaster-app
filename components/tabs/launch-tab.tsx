@@ -1,26 +1,33 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Rocket, Sparkles, Upload, ChevronDown, ChevronUp, ShieldCheck, Zap, CheckCircle2 } from "lucide-react"
+import { Rocket, Sparkles, Upload, ShieldCheck, Zap, CheckCircle2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { useWriteContract, useAccount, useConnect } from "wagmi"
+import sdk from "@farcaster/frame-sdk"
 
 export function LaunchTab() {
   const { isConnected } = useAccount()
   const { connect, connectors } = useConnect()
   const { writeContract } = useWriteContract()
-  
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [formData, setFormData] = useState({ name: "", symbol: "" })
 
+  const handleCastToLaunch = async () => {
+    const text = `@velocityx launch ${formData.name || "TokenName"} $${formData.symbol || "TICKER"}`
+    // This triggers the REAL Farcaster compose window
+    sdk.actions.composeCast({ 
+      text,
+      embeds: ["https://v0-velocity-x-farcaster-app.vercel.app"] 
+    })
+  }
+
   const handleDeployOnChain = () => {
     if (!isConnected) { connect({ connector: connectors[0] }); return }
-    if (!formData.name || !formData.symbol) { alert("Fill name and symbol!"); return }
-
+    
     writeContract({
       address: "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
       abi: [{
@@ -36,8 +43,12 @@ export function LaunchTab() {
       }],
       functionName: 'createToken',
       args: [
-        formData.name, formData.symbol, BigInt(1000000000), 
-        BigInt(0), imagePreview || "", "0x1909b332397144aeb4867B7274a05Dbb25bD1Fec"
+        formData.name, 
+        formData.symbol, 
+        BigInt(1000000000), 
+        BigInt(0), 
+        imagePreview || "", 
+        "0x1909b332397144aeb4867B7274a05Dbb25bD1Fec" // YOUR REWARD POCKET
       ],
     })
   }
@@ -46,7 +57,7 @@ export function LaunchTab() {
     <div className="px-4 pt-4 pb-24 space-y-6">
       <div className="text-center py-2 bg-primary/10 rounded-full border border-primary/20">
         <p className="text-[10px] font-mono font-bold text-primary animate-pulse uppercase">
-          2,847,413,420 REWARDS STREAMED • 10% Partner Fee Active
+          2,847,413,420 REWARDS STREAMED • 10% FEE ACTIVE
         </p>
       </div>
 
@@ -57,30 +68,29 @@ export function LaunchTab() {
         </div>
         <Card className="p-5 bg-gradient-to-br from-primary/20 to-accent/5 border-primary/40 shadow-lg">
           <p className="text-xs text-cyan-200 mb-4 leading-relaxed">
-            Mention <span className="font-bold text-white">@VelocityX</span> in a Farcaster cast with your token name, symbol, and image. Our AI + Clanker will automatically deploy your token on Base!
+            Mention <span className="font-bold text-white">@VelocityX</span> in a Farcaster cast. Our AI + Clanker will automatically deploy your token on Base!
           </p>
           <div className="space-y-2 mb-5">
-             <div className="flex items-center gap-2 text-[10px] text-muted-foreground"><CheckCircle2 className="w-3 h-3 text-primary"/> Include token name and symbol</div>
-             <div className="flex items-center gap-2 text-[10px] text-muted-foreground"><CheckCircle2 className="w-3 h-3 text-primary"/> Attach an image for your token</div>
-             <div className="flex items-center gap-2 text-[10px] text-muted-foreground"><CheckCircle2 className="w-3 h-3 text-primary"/> AI + Clanker deploys automatically</div>
+             <div className="flex items-center gap-2 text-[10px] text-muted-foreground"><CheckCircle2 className="w-3 h-3 text-primary"/> Name and symbol included</div>
+             <div className="flex items-center gap-2 text-[10px] text-muted-foreground"><CheckCircle2 className="w-3 h-3 text-primary"/> 50/50 WETH Reward Split</div>
           </div>
-          <Button onClick={() => alert("Launching Farcaster...")} className="w-full bg-primary hover:bg-primary/90 font-black h-12 shadow-lg">CAST TO LAUNCH</Button>
+          <Button onClick={handleCastToLaunch} className="w-full bg-primary hover:bg-primary/90 font-black h-12 shadow-lg">CAST TO LAUNCH</Button>
         </Card>
       </section>
 
       <section>
         <div className="flex items-center gap-2 mb-3 font-orbitron text-primary uppercase text-sm">
           <Rocket className="w-5 h-5" />
-          <h2>Instant Clanker Creator</h2>
+          <h2>Instant In-App Creator</h2>
         </div>
         
-        <Card className="p-5 bg-card/60 border-primary/20 space-y-4">
+        <Card className="p-5 bg-card/80 border-primary/20 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Input placeholder="Name*" value={formData.name} onChange={(e)=>setFormData({...formData, name:e.target.value})} className="bg-background border-primary/10 h-10 text-xs" />
-            <Input placeholder="Symbol ($)*" value={formData.symbol} onChange={(e)=>setFormData({...formData, symbol:e.target.value})} className="bg-background border-primary/10 h-10 text-xs uppercase" />
+            <Input placeholder="Symbol*" value={formData.symbol} onChange={(e)=>setFormData({...formData, symbol:e.target.value})} className="bg-background border-primary/10 h-10 text-xs uppercase" />
           </div>
 
-          <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-primary/30 rounded-xl p-6 text-center bg-primary/5 cursor-pointer hover:bg-primary/10 transition-all">
+          <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-primary/30 rounded-xl p-6 text-center bg-primary/5 cursor-pointer">
             <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) setImagePreview(URL.createObjectURL(file))
@@ -89,18 +99,14 @@ export function LaunchTab() {
             <p className="text-[10px] text-primary/80 font-bold mt-2 uppercase tracking-widest">Select Image</p>
           </div>
 
-          <div className="p-3 bg-black/40 rounded-lg border border-primary/10 space-y-2">
-             <div className="flex justify-between items-center text-[9px] uppercase font-bold text-muted-foreground">
-               <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-green-400"/> LP: BURNED</span>
-               <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-yellow-400"/> FEE: 1% STATIC</span>
-             </div>
-             <p className="text-[8px] text-primary/60 italic text-center">Settings optimized for maximum visibility on Base.</p>
+          <div className="p-3 bg-black/40 rounded-lg border border-primary/10 flex justify-between items-center text-[9px] uppercase font-bold text-muted-foreground">
+             <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-green-400"/> LP: BURNED</span>
+             <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-yellow-400"/> FEE: 1% STATIC</span>
           </div>
 
-          <Button onClick={handleDeployOnChain} className="w-full bg-primary hover:bg-primary/90 font-black text-xl h-16 shadow-[0_0_25px_rgba(var(--primary),0.4)]">
+          <Button onClick={handleDeployOnChain} className="w-full bg-primary hover:bg-primary/90 font-black text-xl h-16 shadow-2xl">
             {isConnected ? "DEPLOY ON BASE" : "CONNECT WALLET"}
           </Button>
-          <p className="text-[9px] text-center text-muted-foreground uppercase font-bold tracking-widest mt-1">Rewards split: 50% WETH / 50% Token</p>
         </Card>
       </section>
     </div>
