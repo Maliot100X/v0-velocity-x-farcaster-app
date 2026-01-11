@@ -8,22 +8,6 @@ import { Input } from "@/components/ui/input"
 import { useWriteContract, useAccount, useConnect, useWaitForTransactionReceipt } from "wagmi"
 import sdk from "@farcaster/frame-sdk"
 
-// STRICT ABI DEFINITION - DO NOT TOUCH
-const CLANKER_ABI = [
-  {
-    type: "function",
-    name: "deployToken",
-    stateMutability: "payable",
-    inputs: [
-      { name: "_name", type: "string", internalType: "string" },
-      { name: "_symbol", type: "string", internalType: "string" },
-      { name: "_image", type: "string", internalType: "string" },
-      { name: "_fid", type: "uint256", internalType: "uint256" }
-    ],
-    outputs: [{ name: "", type: "address", internalType: "address" }]
-  }
-] as const;
-
 export function LaunchTab() {
   const { isConnected } = useAccount()
   const { connect, connectors } = useConnect()
@@ -54,15 +38,28 @@ export function LaunchTab() {
     const userFid = context?.user?.fid || 0;
 
     writeContract({
+      // THIS IS THE REAL CLANKER FACTORY ADDRESS
       address: "0x448f8b93784834ef9853966eb962f928e469796e",
-      abi: CLANKER_ABI,
+      abi: [{
+        name: 'deployToken',
+        type: 'function',
+        stateMutability: 'payable',
+        inputs: [
+          { name: '_name', type: 'string' },
+          { name: '_symbol', type: 'string' },
+          { name: '_image', type: 'string' },
+          { name: '_fid', type: 'uint256' },
+        ],
+        outputs: [{ name: '', type: 'address' }],
+      }],
       functionName: 'deployToken',
       args: [
-        formData.name || "Unnamed", 
-        formData.symbol || "VX", 
+        formData.name, 
+        formData.symbol, 
         imagePreview || "https://v0-velocity-x-farcaster-app.vercel.app/logo.png", 
         BigInt(userFid), 
       ],
+      // Use 0n for no seed, or parseEther("0.001") to add LP
       value: 0n,
     })
   }
@@ -70,12 +67,11 @@ export function LaunchTab() {
   return (
     <div className="px-4 pt-4 pb-24 space-y-6 italic">
       {(isPending || isConfirming) && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[200] flex flex-col items-center justify-center text-center px-6">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex flex-col items-center justify-center text-center px-6">
           <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-          <p className="text-primary font-black font-orbitron animate-pulse uppercase tracking-widest text-lg">
-            {isPending ? "AUTHORIZING..." : "BIRTHING COIN..."}
+          <p className="text-primary font-black font-orbitron animate-pulse uppercase tracking-widest">
+            {isPending ? "SIGNING..." : "DEPLOYING..."}
           </p>
-          <p className="text-[10px] text-white/50 mt-2 uppercase font-bold tracking-[0.2em]">Deploying via Clanker Factory</p>
         </div>
       )}
 
@@ -94,10 +90,6 @@ export function LaunchTab() {
           <p className="text-xs text-cyan-200 mb-4 leading-relaxed font-medium">
             Mention <span className="font-bold text-white">@VelocityX</span> in a Farcaster cast. Our AI + Clanker will automatically deploy your token on Base!
           </p>
-          <div className="space-y-2 mb-5">
-             <div className="flex items-center gap-2 text-[10px] text-muted-foreground"><CheckCircle2 className="w-3 h-3 text-primary"/> Name and symbol included</div>
-             <div className="flex items-center gap-2 text-[10px] text-muted-foreground"><CheckCircle2 className="w-3 h-3 text-primary"/> 50/50 WETH Reward Split</div>
-          </div>
           <Button onClick={handleCastToLaunch} className="w-full bg-primary hover:bg-primary/90 font-black h-12 shadow-lg italic uppercase">CAST TO LAUNCH</Button>
         </Card>
       </section>
