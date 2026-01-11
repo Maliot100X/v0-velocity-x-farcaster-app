@@ -18,38 +18,46 @@ export function LaunchTab() {
 
   const handleCastToLaunch = async () => {
     const text = `@velocityx launch ${formData.name || "TokenName"} $${formData.symbol || "TICKER"}`
-    // This triggers the REAL Farcaster compose window
     sdk.actions.composeCast({ 
       text,
       embeds: ["https://v0-velocity-x-farcaster-app.vercel.app"] 
     })
   }
 
-  const handleDeployOnChain = () => {
-    if (!isConnected) { connect({ connector: connectors[0] }); return }
+  const handleDeployOnChain = async () => {
+    if (!isConnected) { 
+      connect({ connector: connectors[0] }); 
+      return 
+    }
     
+    // FETCH REAL FID FROM FARCASTER CONTEXT
+    const context = await sdk.context;
+    const userFid = context?.user?.fid || 0;
+
     writeContract({
-      address: "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
+      // REAL CLANKER V2 FACTORY ADDRESS
+      address: "0x448f8b93784834ef9853966eb962f928e469796e",
       abi: [{
-        name: 'createToken',
+        name: 'deployToken',
         type: 'function',
-        stateMutability: 'public',
+        stateMutability: 'payable',
         inputs: [
-          { name: 'name', type: 'string' }, { name: 'symbol', type: 'string' },
-          { name: 'supply', type: 'uint256' }, { name: 'fid', type: 'uint256' },
-          { name: 'image', type: 'string' }, { name: 'partner', type: 'address' }
+          { name: '_name', type: 'string' },
+          { name: '_symbol', type: 'string' },
+          { name: '_image', type: 'string' },
+          { name: '_fid', type: 'uint256' },
         ],
         outputs: [{ name: '', type: 'address' }],
       }],
-      functionName: 'createToken',
+      functionName: 'deployToken',
       args: [
         formData.name, 
         formData.symbol, 
-        BigInt(1000000000), 
-        BigInt(0), 
-        imagePreview || "", 
-        "0x1909b332397144aeb4867B7274a05Dbb25bD1Fec" // YOUR REWARD POCKET
+        imagePreview || "https://v0-velocity-x-farcaster-app.vercel.app/logo.png", 
+        BigInt(userFid), 
       ],
+      // 0n means no initial ETH buy. Set to parseEther("0.001") for real LP seed.
+      value: 0n,
     })
   }
 
