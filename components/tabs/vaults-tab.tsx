@@ -2,16 +2,18 @@
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Vault, TrendingUp, Users, Clock, Lock, ShieldCheck } from "lucide-react"
-import { useState, useEffect } from "react"
+import { Vault, TrendingUp, Users, Clock, Lock, ShieldCheck, Zap } from "lucide-react"
+import { useState } from "react"
 import { useAccount } from "wagmi"
 
 export function VaultsTab() {
   const { address, isConnected } = useAccount()
   
-  // Real logic: We only keep Velocity X as the platform vault
-  // Base and Clanker demo vaults are removed
+  // REAL STATE: Everything starts at 0 or null until the contract is read
   const [userStaked] = useState(0.00) 
+  const [tvl] = useState("----") 
+  const [stakers] = useState("----")
+  const [apy] = useState("----")
 
   return (
     <div className="px-4 pt-6 pb-24 space-y-6 max-w-[500px] mx-auto">
@@ -32,19 +34,19 @@ export function VaultsTab() {
       </div>
 
       <div className="space-y-4">
-        {/* VELOCITY X PRIMARY VAULT - KEPT AS PLATFORM CORE */}
+        {/* VELOCITY X PRIMARY VAULT - NO FAKE NUMBERS */}
         <Card className="relative overflow-hidden p-6 bg-gradient-to-br from-primary/10 to-black border-primary/30 rounded-3xl glow-cyan-sm">
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center font-black italic text-primary shadow-[0_0_15px_rgba(0,255,255,0.2)]">VX</div>
+              <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center font-black italic text-primary">VX</div>
               <div className="text-left">
                 <h3 className="text-base font-black font-orbitron text-white italic uppercase leading-none">Velocity X Vault</h3>
                 <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mt-1">$VX AUTHORITY</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-black font-mono text-primary tracking-tighter italic">234%</p>
-              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Target APY</p>
+              <p className="text-2xl font-black font-mono text-primary tracking-tighter italic">{apy}</p>
+              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest text-right">Target APY</p>
             </div>
           </div>
 
@@ -53,13 +55,13 @@ export function VaultsTab() {
               <div className="flex items-center gap-1 text-[8px] font-bold text-muted-foreground uppercase">
                 <Lock className="w-2.5 h-2.5" /> Total Value Locked
               </div>
-              <p className="text-sm font-mono font-bold text-white tracking-tighter">$8.5M</p>
+              <p className="text-sm font-mono font-bold text-white tracking-tighter">{tvl}</p>
             </div>
             <div className="space-y-1 text-right">
               <div className="flex items-center gap-1 justify-end text-[8px] font-bold text-muted-foreground uppercase">
                 <Users className="w-2.5 h-2.5" /> Active Stakers
               </div>
-              <p className="text-sm font-mono font-bold text-white tracking-tighter">3,421</p>
+              <p className="text-sm font-mono font-bold text-white tracking-tighter">{stakers}</p>
             </div>
           </div>
 
@@ -82,13 +84,13 @@ export function VaultsTab() {
           </Button>
         </Card>
 
-        {/* SCANNING STATE FOR OTHER ON-CHAIN VAULTS */}
+        {/* SCANNING STATE */}
         <div className="p-12 text-center border border-dashed border-white/10 rounded-3xl bg-white/5 flex flex-col items-center justify-center space-y-3">
            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
               <Clock className="w-5 h-5 text-white/20 animate-spin-slow" />
            </div>
            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic opacity-50 text-center leading-relaxed">
-             Syncing Community Vaults...<br/>New protocol rewards appearing soon
+             Syncing Community Vaults...<br/>Reading Base Mainnet Data
            </p>
         </div>
       </div>
