@@ -1,20 +1,21 @@
 import { AgentKit, CdpWalletProvider } from "@coinbase/agentkit";
 
 export async function runVelocityAgent() {
-  // Logic: Initialize the Wallet Provider correctly for 2026 SDK
+  // Logic: Configure the Wallet Provider first
   const walletProvider = await CdpWalletProvider.configureWithWallet({
     apiKeyName: process.env.CDP_API_KEY_NAME,
     apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     networkId: "base-mainnet",
   });
 
-  // Logic: Create AgentKit instance
+  // Logic: Initialize AgentKit with the provider
   const agentkit = await AgentKit.from({
     walletProvider,
     actionProviders: [], 
   });
 
-  console.log("VELOCITY X AI AGENT: ONLINE AND LISTENING...");
+  console.log("VELOCITY X AI AGENT: ONLINE");
+  console.log("LISTENING ON BASE MAINNET...");
   return agentkit;
 }
 
