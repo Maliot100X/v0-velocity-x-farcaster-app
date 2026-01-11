@@ -18,45 +18,44 @@ export function LaunchTab() {
 
   const handleCastToLaunch = async () => {
     const text = `@velocityx launch ${formData.name || "TokenName"} $${formData.symbol || "TICKER"}`
+    // This triggers the REAL Farcaster compose window
     sdk.actions.composeCast({ 
-      text,
+      text, 
       embeds: ["https://v0-velocity-x-farcaster-app.vercel.app"] 
     })
   }
 
-  const handleDeployOnChain = async () => {
+  const handleDeployOnChain = () => {
     if (!isConnected) { 
       connect({ connector: connectors[0] }); 
       return 
     }
     
-    // Grab the real Farcaster ID from the app context
-    const context = await sdk.context;
-    const userFid = context?.user?.fid || 0;
-
     writeContract({
-      // REAL CLANKER V2 FACTORY
-      address: "0x448f8b93784834ef9853966eb962f928e469796e",
+      address: "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
       abi: [{
-        name: 'deployToken',
+        name: 'createToken',
         type: 'function',
-        stateMutability: 'payable',
+        stateMutability: 'public',
         inputs: [
-          { name: '_name', type: 'string' },
-          { name: '_symbol', type: 'string' },
-          { name: '_image', type: 'string' },
-          { name: '_fid', type: 'uint256' },
+          { name: 'name', type: 'string' },
+          { name: 'symbol', type: 'string' },
+          { name: 'supply', type: 'uint256' },
+          { name: 'fid', type: 'uint256' },
+          { name: 'image', type: 'string' },
+          { name: 'partner', type: 'address' }
         ],
         outputs: [{ name: '', type: 'address' }],
       }],
-      functionName: 'deployToken',
+      functionName: 'createToken',
       args: [
-        formData.name, 
-        formData.symbol, 
-        imagePreview || "https://v0-velocity-x-farcaster-app.vercel.app/logo.png", 
-        BigInt(userFid), 
+        formData.name,
+        formData.symbol,
+        BigInt(1000000000),
+        BigInt(0),
+        imagePreview || "",
+        "0x1909b332397144aeb4867B7274a05Dbb25bD1Fec" // YOUR REWARD POCKET
       ],
-      value: 0n, // 0 ETH fee for the deployment itself, only pay gas
     })
   }
 
@@ -74,37 +73,73 @@ export function LaunchTab() {
           <h2>CAST TO LAUNCH</h2>
         </div>
         <Card className="p-5 bg-gradient-to-br from-primary/20 to-accent/5 border-primary/40 shadow-lg">
-          <p className="text-xs text-cyan-200 mb-4 leading-relaxed font-medium">
+          <p className="text-xs text-cyan-200 mb-4 leading-relaxed">
             Mention <span className="font-bold text-white">@VelocityX</span> in a Farcaster cast. Our AI + Clanker will automatically deploy your token on Base!
           </p>
-          <Button onClick={handleCastToLaunch} className="w-full bg-primary hover:bg-primary/90 font-black h-12 shadow-lg italic uppercase">CAST TO LAUNCH</Button>
+          <div className="space-y-2 mb-5">
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <CheckCircle2 className="w-3 h-3 text-primary" /> Name and symbol included
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <CheckCircle2 className="w-3 h-3 text-primary" /> 50/50 WETH Reward Split
+            </div>
+          </div>
+          <Button onClick={handleCastToLaunch} className="w-full bg-primary hover:bg-primary/90 font-black h-12 shadow-lg">
+            CAST TO LAUNCH
+          </Button>
         </Card>
       </section>
 
       <section>
-        <div className="flex items-center gap-2 mb-3 font-orbitron text-primary uppercase text-sm italic">
+        <div className="flex items-center gap-2 mb-3 font-orbitron text-primary uppercase text-sm">
           <Rocket className="w-5 h-5" />
           <h2>Instant In-App Creator</h2>
         </div>
-        
-        <Card className="p-5 bg-card/80 border-primary/20 space-y-4 shadow-xl">
+        <Card className="p-5 bg-card/80 border-primary/20 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Input placeholder="Name*" value={formData.name} onChange={(e)=>setFormData({...formData, name:e.target.value})} className="bg-background border-primary/10 h-10 text-xs italic" />
-            <Input placeholder="Symbol*" value={formData.symbol} onChange={(e)=>setFormData({...formData, symbol:e.target.value})} className="bg-background border-primary/10 h-10 text-xs uppercase italic font-bold" />
+            <Input
+              placeholder="Name*"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="bg-background border-primary/10 h-10 text-xs"
+            />
+            <Input
+              placeholder="Symbol*"
+              value={formData.symbol}
+              onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+              className="bg-background border-primary/10 h-10 text-xs uppercase"
+            />
           </div>
-
-          <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-primary/30 rounded-xl p-6 text-center bg-primary/5 cursor-pointer">
-            <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) setImagePreview(URL.createObjectURL(file))
-            }} />
-            {imagePreview ? <img src={imagePreview} className="h-16 mx-auto rounded shadow-lg object-cover" /> : <Upload className="w-6 h-6 text-primary mx-auto opacity-70" />}
-          </div>
-
-          <Button 
-            onClick={handleDeployOnChain} 
-            className="w-full bg-primary hover:bg-primary/90 font-black text-xl h-16 shadow-2xl italic tracking-tighter uppercase"
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-primary/30 rounded-xl p-6 text-center bg-primary/5 cursor-pointer"
           >
+            <input
+              type="file"
+              ref={fileInputRef}
+              hidden
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) setImagePreview(URL.createObjectURL(file))
+              }}
+            />
+            {imagePreview ? (
+              <img src={imagePreview} className="h-16 mx-auto rounded shadow-lg" />
+            ) : (
+              <Upload className="w-6 h-6 text-primary mx-auto opacity-70" />
+            )}
+            <p className="text-[10px] text-primary/80 font-bold mt-2 uppercase tracking-widest">Select Image</p>
+          </div>
+          <div className="p-3 bg-black/40 rounded-lg border border-primary/10 flex justify-between items-center text-[9px] uppercase font-bold text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-green-400" /> LP: BURNED
+            </span>
+            <span className="flex items-center gap-1">
+              <Zap className="w-3 h-3 text-yellow-400" /> FEE: 1% STATIC
+            </span>
+          </div>
+          <Button onClick={handleDeployOnChain} className="w-full bg-primary hover:bg-primary/90 font-black text-xl h-16 shadow-2xl">
             {isConnected ? "DEPLOY ON BASE" : "CONNECT WALLET"}
           </Button>
         </Card>
